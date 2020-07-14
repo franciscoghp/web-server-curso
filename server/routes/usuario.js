@@ -8,22 +8,14 @@ const Usuario = require('../models/usuario')
 
 const _ = require('underscore')
 
-const bodyParser = require('body-parser');
+const { verificaToken, verificaAdminRole } = require('../middlewares/autentificacion')
 
-// parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
-
-// parse application/json
-app.use(bodyParser.json())
-
-
-
-app.get('/usuario', (req, res) => {
+app.get('/usuario', verificaToken, (req, res) => {
 
     let desde = Number(req.query.desde || 0)
     let limite = Number(req.query.limite || 5)
 
-    Usuario.find({ estado: false }, 'nombre estado google role email img')
+    Usuario.find({ role: 'ADMIN_ROLE' }, 'nombre estado google role email img')
         .skip(desde)
         .limit(limite)
         .exec((err, usuarios) => {
@@ -34,7 +26,7 @@ app.get('/usuario', (req, res) => {
                 })
             }
 
-            Usuario.count({ estado: false }, (err, conteo) => {
+            Usuario.count({ role: 'ADMIN_ROLE' }, (err, conteo) => {
                 if (err) {
                     return res.status(400).json({
                         ok: false,
@@ -52,7 +44,7 @@ app.get('/usuario', (req, res) => {
         })
 
 });
-app.post('/usuario', (req, res) => {
+app.post('/usuario', [verificaToken, verificaAdminRole], (req, res) => {
     let body = req.body
 
     let usuario = new Usuario({
@@ -78,7 +70,7 @@ app.post('/usuario', (req, res) => {
 
 })
 
-app.put('/usuario/:id', (req, res) => {
+app.put('/usuario/:id', [verificaToken, verificaAdminRole], (req, res) => {
     let id = req.params.id
     let body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado'])
 
@@ -98,49 +90,49 @@ app.put('/usuario/:id', (req, res) => {
     })
 })
 
-app.delete('/usuario/:id', (req, res) => {
+app.delete('/usuario/:id', [verificaToken, verificaAdminRole], (req, res) => {
 
-    /* let id = req.params.id
+    let id = req.params.id
     Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
 
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err
-            })
-        }
+            if (err) {
+                return res.status(400).json({
+                    ok: false,
+                    err
+                })
+            }
 
-        if (!usuarioBorrado) {
-            return res.status(400).json({
-                ok: false,
-                err: {
-                    message: 'Usuario no encontrado'
-                }
-            })
-        }
+            if (!usuarioBorrado) {
+                return res.status(400).json({
+                    ok: false,
+                    err: {
+                        message: 'Usuario no encontrado'
+                    }
+                })
+            }
 
-        res.json({
-            ok: true,
-            usuario: usuarioBorrado
+            res.json({
+                ok: true,
+                usuario: usuarioBorrado
+            })
+
         })
+        /* let id = req.params.id
 
-    }) */
-    let id = req.params.id
+        Usuario.findByIdAndUpdate(id, { estado: false }, { new: true, runValidators: true }, (err, usuarioDB) => {
 
-    Usuario.findByIdAndUpdate(id, { estado: false }, { new: true, runValidators: true }, (err, usuarioDB) => {
+            if (err) {
+                return res.status(400).json({
+                    ok: false,
+                    err
+                })
+            }
 
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err
+            res.json({
+                ok: true,
+                usuarioDB
             })
-        }
-
-        res.json({
-            ok: true,
-            usuarioDB
-        })
-    })
+        }) */
 })
 
 module.exports = app

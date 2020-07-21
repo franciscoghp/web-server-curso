@@ -1,9 +1,8 @@
 const jwt = require('jsonwebtoken')
 
-
-// ======================
+// ===========================
 //      VERIFICAR TOKEN
-//=======================
+//============================
 let verificaToken = (req, res, next) => {
 
     let token = req.get('token')
@@ -20,13 +19,15 @@ let verificaToken = (req, res, next) => {
         }
 
         req.usuario = decoded.usuario
+        req.categoria = decoded.categoria
+
         next()
     })
 };
 
-// ======================
+// =============================
 //      VERIFICAR ADMIN_ROLE
-//=======================
+//==============================
 let verificaAdminRole = (req, res, next) => {
 
     let usuario = req.usuario

@@ -8,6 +8,8 @@ const jwt = require('jsonwebtoken')
 
 const Usuario = require('../models/usuario')
 
+let Categoria = require('../models/categoria');
+
 app.post('/login', (req, res) => {
 
     let body = req.body;
@@ -25,7 +27,7 @@ app.post('/login', (req, res) => {
             return res.status(400).json({
                 ok: false,
                 err: {
-                    message: 'Usuario o contraseña incorrectos'
+                    message: '[Usuario] o contraseña incorrectos'
                 }
             })
         }
@@ -34,22 +36,33 @@ app.post('/login', (req, res) => {
             return res.status(400).json({
                 ok: false,
                 err: {
-                    message: 'Usuario o contraseña incorrectos'
+                    message: 'Usuario o [contraseña] incorrectos'
                 }
             })
         }
 
-        let token = jwt.sign({
-            usuario: usuarioDB
-        }, process.env.SEED, { expiresIn: process.env.CADUCIDAD_TOKEN })
+        Categoria.findOne({ descripcion: body.descripcion }, (err, categoriaDB) => {
 
-        res.json({
-            ok: true,
-            usuario: usuarioDB,
-            token
-        });
+            if (err) {
+                return res.status(500).json({
+                    ok: false,
+                    err
+                })
+            }
+
+            let token = jwt.sign({
+                usuario: usuarioDB,
+                categoria: categoriaDB,
+            }, process.env.SEED, { expiresIn: process.env.CADUCIDAD_TOKEN })
+
+            res.json({
+                ok: true,
+                usuario: usuarioDB,
+                categoria: categoriaDB,
+                token
+            });
+        })
     })
-
 });
 
 module.exports = app
